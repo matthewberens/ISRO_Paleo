@@ -1,0 +1,6 @@
+library(dplyr)
+library(ggplot2)
+library(tidyr)
+library(rbacon)
+setwd("~/Documents/Postdocs/LLO/ISRO_Paleo")
+Bacon("LS16BELLRC", coredir = "./Cores")
