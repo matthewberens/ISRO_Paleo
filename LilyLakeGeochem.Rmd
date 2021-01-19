@@ -1,0 +1,95 @@
+---
+title: "Lily Lake Biogeochem"
+author: "Matthew J Berens"
+date: "1/18/2021"
+output: html_notebook
+---
+
+```{r setup, include=FALSE}
+#Load in the required packages
+library(dplyr)
+library(ggplot2)
+library(tidyverse)
+library(rbacon)
+library(Bchron)
+library(readr)
+library(rioja)
+library(rlist)
+
+#Load the Lily Lake Core
+setwd("~/Documents/Postdocs/LLO/ISRO_Paleo")
+LS16BELL00 <- read_csv("Cores/LS16BELL00/LS16BELL00.csv")
+LS16BELLRC <- read_csv("Cores/LS16BELLRC/LS16BELLRC.csv")
+LilyLake <- list.load("LilyLake.Rdata")
+
+```
+
+## Oveview
+
+This is an R Markdown document for the analysis of Lily Lake Biogeochem.
+
+## Age-Depth Modeling
+Age-Depth modeling performed using Bchron and rbacon packages.
+
+```{r radiocarbon, echo=FALSE}
+
+ageCal <- with(LL16BELLRC,
+               Bchronology(ages = age,
+                           ageSds = error,
+                           calCurves = rep('intcal20', nrow(LS16BELLRC)),
+                           positions = depth,
+                           ids = labID,
+                           predictPositions = LS16BELL00$SedDepth))
+```
+
+## Metals Analysis
+
+You can also embed plots, for example:
+
+```{r metals, echo=FALSE}
+metals <- filter(LS16BELL00, HasMetals == "TRUE") %>%
+  select(Entry:U) %>%
+  pivot_longer(cols = Li:U,
+               names_to = "Element",
+               values_to = "Value")
+
+metals <- filter(metals, Element == "Mg")
+
+plot <- metals %>%
+  ggplot() +
+  geom_point(aes(Value, SedDepth, col=Element)) +
+  theme_bw() +
+  scale_y_reverse() +
+  scale_x_continuous(position = "top") +
+  labs(y = "Depth (cm)", x = "Concentration (ppm)")
+
+plot
+```
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
+
+```{r rioja, include=TRUE}
+
+strat.plot(LilyLake$metals, yvar = LilyLake$ages$SedDepth, y.rev=TRUE,
+           ylabel = "Depth (cm)",
+           plot.line = TRUE)
+
+```
+
+
+```{r list}
+
+metals <- select(LS16BELL00, Li:U) 
+ages <- select(LS16BELL00, SedDepth:AgeHi)
+organic <- select(LS16BELL00, S_V:d13C)
+mineral <- select(LS16BELL00, ResMinMatterPct:OrgPct)
+drive <- LS16BELL00$Drive
+
+metalsD = as.data.frame(metals)
+agesD = as.data.frame(ages)
+organicD = as.data.frame(organic)
+mineralD = as.data.frame(mineral)
+
+LilyLake <- list("names" = drive, "ages" = agesD, "metals" = metalsD, "organic" = organicD, "mineral" = mineralD)
+
+```
