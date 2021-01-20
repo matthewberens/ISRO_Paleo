@@ -15,6 +15,7 @@ library(Bchron)
 library(readr)
 library(rioja)
 library(rlist)
+library(ggpmisc)
 
 #Load the Lily Lake Core
 setwd("~/Documents/Postdocs/LLO/ISRO_Paleo")
@@ -44,52 +45,56 @@ ageCal <- with(LL16BELLRC,
 
 ## Metals Analysis
 
-You can also embed plots, for example:
+### Lead and Potassium
 
 ```{r metals, echo=FALSE}
-metals <- filter(LS16BELL00, HasMetals == "TRUE") %>%
+metals <- filter(LS16BELL00, IsMetals == "TRUE") %>%
   select(Entry:U) %>%
   pivot_longer(cols = Li:U,
                names_to = "Element",
                values_to = "Value")
 
-metals <- filter(metals, Element == "Mg")
+metals <- filter(metals, Element == "Pb" | Element == "K")
 
 plot <- metals %>%
-  ggplot() +
-  geom_point(aes(Value, SedDepth, col=Element)) +
+  ggplot(aes(AgeMed, Value)) +
+  geom_line() +
   theme_bw() +
-  scale_y_reverse() +
-  scale_x_continuous(position = "top") +
-  labs(y = "Depth (cm)", x = "Concentration (ppm)")
-
+  #scale_y_reverse() +
+  #scale_x_continuous(position = "top") +
+  labs(y = "Concentration", x = "Calendar Years BP") +
+  facet_grid(Element~., scales = "free_y") +
+  stat_peaks(strict = TRUE, geom = "text", ignore_threshold = 0.1)
+  
 plot
 ```
 
-Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
+There are corresponding peaks in the Pb and K results at 5993 and 9312 yrs BP
 
-```{r rioja, include=TRUE}
+```{r organic. echo=FALSE}
 
-strat.plot(LilyLake$metals, yvar = LilyLake$ages$SedDepth, y.rev=TRUE,
-           ylabel = "Depth (cm)",
-           plot.line = TRUE)
+organic <- filter(LS16BELL00, IsOrganic == "TRUE") %>%
+  select(Entry:d13C) %>%
+  select(-(Li:U)) %>%
+  pivot_longer(cols = S_V:d13C,
+               names_to = "Element",
+               values_to = "Value")
 
-```
+organic <- filter(organic, Element == "CN_mol" | Element == "CN_pct")
+organic <- organic[!is.na(organic$Value),]
 
-
-```{r list}
-
-metals <- select(LS16BELL00, Li:U) 
-ages <- select(LS16BELL00, SedDepth:AgeHi)
-organic <- select(LS16BELL00, S_V:d13C)
-mineral <- select(LS16BELL00, ResMinMatterPct:OrgPct)
-drive <- LS16BELL00$Drive
-
-metalsD = as.data.frame(metals)
-agesD = as.data.frame(ages)
-organicD = as.data.frame(organic)
-mineralD = as.data.frame(mineral)
-
-LilyLake <- list("names" = drive, "ages" = agesD, "metals" = metalsD, "organic" = organicD, "mineral" = mineralD)
+plot <- organic %>%
+  #drop_na(Value) %>%
+  ggplot(aes(y = SedDepth, x = Value)) +
+  #geom_path() +
+  geom_point() +
+  theme_bw() +
+  scale_y_reverse() +
+  #scale_x_continuous(position = "top") +
+  labs(y = "Depth (cm)", x = "Concentration") +
+  facet_grid(Element~., scales = "free_x") 
+  #stat_peaks(strict = TRUE, geom = "text", ignore_threshold = 0.1)
+  
+plot
 
 ```
