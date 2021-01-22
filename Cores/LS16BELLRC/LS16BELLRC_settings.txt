@@ -1,5 +1,5 @@
-210.5 #d.min
-683.5 #d.max
+0.5 #d.min
+755 #d.max
 1 #d.by
 0 #depths.file
  #slump
@@ -13,7 +13,7 @@ NA #hiatus.depths
 10000 #hiatus.max
 0 #BCAD
 1 #cc
-0 #postbomb
+1 #postbomb
 IntCal20 #cc1
 Marine20 #cc2
 SHCal20 #cc3

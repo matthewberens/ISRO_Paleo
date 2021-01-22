@@ -31,18 +31,41 @@ This is an R Markdown document for the analysis of Lily Lake Biogeochem.
 
 ## Metals Analysis
 
-### Lead and Potassium
-
-```{r metals, echo=TRUE}
+Separate out the metals
+```{r , echo=FALSE}
 metals <- filter(LS16BELL00, IsMetals == "TRUE") %>%
-  select(Entry:U) %>%
+  select(SedDepth:U) %>%
   pivot_longer(cols = Li:U,
                names_to = "Element",
                values_to = "Value")
+```
 
-metals <- filter(metals, Element == "Pb" | Element == "K")
+### Transition Metals
 
-plot <- metals %>%
+```{r metals, echo=FALSE}
+
+plot <- filter(metals, Element == "Cu" | Element == "P" | Element == "Sb" | Element == "Zn" | Element == "Sn") %>%
+  ggplot(aes(AgeMed, Value)) +
+  geom_rect(aes(xmin = LS16BELL00$AgeLo[299], xmax = LS16BELL00$AgeHi[299], ymin = -Inf, ymax = Inf), alpha = 0.2, fill = "grey") +
+  geom_rect(aes(xmin = LS16BELL00$AgeLo[626], xmax = LS16BELL00$AgeHi[626], ymin = -Inf, ymax = Inf), alpha = 0.2, fill = "grey") +
+  geom_line() +
+  coord_flip() +
+  theme_bw() +
+  scale_x_reverse(limits = c(10000,0)) +
+  labs(y = "Concentration (ppm)", x = "Calendar Years BP") +
+  facet_grid(~Element, scales = "free_x") 
+  #stat_peaks(strict = TRUE, geom = "text", ignore_threshold = 0.2)
+  
+plot
+```
+
+There are corresponding peaks in the Pb and K results at 2263, 8906 yrs BP
+
+### Phosphorus and Iron
+```{r , echo=FALSE}
+
+
+plotFeP <- filter(metals, Element == "Fe" | Element == "P") %>%
   ggplot(aes(AgeMed, Value)) +
   geom_line() +
   coord_flip() +
@@ -50,36 +73,37 @@ plot <- metals %>%
   scale_x_reverse(limits = c(10000,0)) +
   labs(y = "Concentration (ppm)", x = "Calendar Years BP") +
   facet_grid(~Element, scales = "free_x") +
-  stat_peaks(strict = TRUE, geom = "text", ignore_threshold = 0.1)
+  stat_peaks(strict = TRUE, geom = "text", ignore_threshold = 0.2)
   
-plot
+plotFeP
 ```
 
-There are corresponding peaks in the Pb and K results at 5993 and 9312 yrs BP
+### Organic Data
+Filter out the organic results
 
-```{r organic. echo=FALSE}
+```{r organic, echo=FALSE}
 
 organic <- filter(LS16BELL00, IsOrganic == "TRUE") %>%
-  select(Entry:d13C) %>%
-  select(-(Li:U)) %>%
+  select(SedDepth:AgeHi, S_V:d13C) %>%
   pivot_longer(cols = S_V:d13C,
                names_to = "Element",
                values_to = "Value")
+```
 
-organic <- filter(organic, Element == "CN_mol" | Element == "CN_pct")
-organic <- organic[!is.na(organic$Value),]
-
-plot <- organic %>%
+```{r, echo=FALSE}
+#plotOrg <- filter(organic, Element == "CN_mol" | Element == "C_V") %>%
+plotOrg <- organic %>%
+  drop_na() %>%
   ggplot(aes(AgeMed, Value)) +
   geom_line() +
   coord_flip() +
   #geom_point() +
   theme_bw() +
-  scale_x_reverse(limits = c(10000,0)) +
+  scale_x_reverse() +
   labs(y = "Concentration", x = "Age yrs BP") +
   facet_grid(~Element, scales = "free_x") 
   #stat_peaks(strict = TRUE, geom = "text", ignore_threshold = 0.1)
   
-plot
+plotOrg
 
 ```
