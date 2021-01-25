@@ -45,6 +45,8 @@ age
 
 ## Metals Analysis
 
+Background Levels of Metals
+
 Separate out the metals
 ```{r , echo=FALSE}
 metals <- filter(LS16BELL00, IsMetals == "TRUE") %>%
